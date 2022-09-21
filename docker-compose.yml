@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./stockback
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: evg226
+      DB_PASSWORD: dev
+    ports:
+      - 8000:8000
+    volumes:
+      - ./stockback:/app/backend
+    depends_on:
+      - pgsql
+      - redis
+    networks:
+      - app
+
+  frontend:
+    build:
+      context: ./stockfront
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ./stockfront:/app/frontend
+    depends_on:
+      - backend
+    networks:
+      - app
+
+  pgsql:
+    image: postgres:13.0
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+     - POSTGRES_USER=evg226
+     - POSTGRES_PASSWORD=dev
+     - POSRGRES_DB=stock
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - app
+networks:
+  app:
+    driver: bridge
+
